@@ -12,6 +12,7 @@ In this homework I will investigate factors that influence bike share usage. The
 library(tidyverse)
 library(dplyr)
 library(purrr)
+library(stringr)
 library(psych)
 #library(tidymodels)
 ```
@@ -125,7 +126,7 @@ These data will be aggregated across hours at the day level
 ```{r}
 
 modeldata <- bike_subset_clean |>
-  group_by(date,season_f, holiday_f) |>
+  group_by(date, season_f, holiday_f) |>
   summarize(
     count = sum(count),
     sum_rain = sum(rain),
@@ -137,8 +138,19 @@ modeldata <- bike_subset_clean |>
     avg_wind = mean(wind),
     avg_vis = mean(vis),
     avg_dew = mean(dew),
-    avg_rad = mean(rad)
+    avg_rad = mean(rad),
+    .groups = 'drop' #grouping was creating issues with future analyses
   )
+```
+
+## Correlation Matrix
+
+Here we will create a correlation matrix among numeric "avg\_" variables in the dataset.
+
+```{r}
+modeldata |> 
+  select(starts_with("avg")) |> 
+  cor() 
 ```
 
 Now we will create new summary statistics and plots using the new 'modeldata' dataset.
@@ -171,12 +183,14 @@ modeldata$avg_total_precip <- (modeldata$avg_rain + (modeldata$avg_snow*10))
 ggplot(modeldata, aes(x = avg_humid, y = avg_total_precip)) +
   geom_point()+
   labs(title = "Total Precipitation (mm) by Humidity", x = "Humidity", y = "Precipitation (mm)") +
-  theme_minimal()
+  theme_light()
   
-#with paneling by season
+#with faceting by season
 ggplot(modeldata, aes(x = avg_humid, y = avg_total_precip, fill = season_f)) +
   geom_point()+
   labs(title = "Total Precipitation (mm) by Humidity and Season", x = "Humidity", y = "Precipitation (mm)") +
   facet_wrap(~ season_f, nrow = 2, scales = "free_y") +
-  theme_minimal()
+  theme_light()
 ```
+
+## 
