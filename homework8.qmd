@@ -1,0 +1,182 @@
+---
+title: "Homework8"
+format: html
+editor: visual
+---
+
+# Homework8 - Modeling Practice
+
+In this homework I will investigate factors that influence bike share usage. The data set is courtesy of the UC Irvine Machine Learning Repository, it tracks bike share utilization across specific days and hours with additional variables relating to weather. There are also variables telling us if a given day was a holiday or functioning (working) day.
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(purrr)
+library(psych)
+#library(tidymodels)
+```
+
+This is a simple reading of a CSV file from a hyperlink but for a data encoding mismatch that must be handled via the locale = argument. The dataframe I will use before any subsetting or cleaning will be named 'bike_full'.
+
+```{r}
+bike_full <- read_csv("https://www4.stat.ncsu.edu/~online/datasets/SeoulBikeData.csv", locale = (locale(encoding = "latin1")))
+```
+
+# Exploratory Analysis
+
+To begin exploring the data and making myself familiar with it I will first check for missing values. Sum_na is a function we will write that takes a specific column, or columns (using across()).
+
+We can see there are no missing values among any variable in the data set.
+
+```{r}
+sum_na <- function(column){
+  sum(is.na(column))
+}
+
+na_counts <- bike_full |>
+  summarize(across(everything(), sum_na))
+na_counts
+```
+
+Next I will simply view the bike_full tibble and get a sense of what variables are numeric, categorical, and if the way they're formatted in R is appropriate. Notably, date is currently a character variable, and variables like seasons and holiday can be made into factors.
+
+```{r}
+bike_full
+
+str(bike_full)
+```
+
+## Create factors and rename variables
+
+This step renames variables to shorten, remove capitalization, non letter characters, and spaces. To preserve old data a new data set is created.
+
+```{r}
+bike_full_clean <- bike_full |>
+  rename( "date" = Date,
+          "count" = `Rented Bike Count`,
+          "hour" = Hour,
+          "temp" = `Temperature(°C)`,
+          "humid" = `Humidity(%)`,
+          "wind" = `Wind speed (m/s)`,
+          "vis" = `Visibility (10m)`,
+          "dew" = `Dew point temperature(°C)`,
+          "rad" = `Solar Radiation (MJ/m2)`,
+          "rain" = `Rainfall(mm)`,
+          "snow" = `Snowfall (cm)`,
+          "season" = Seasons,
+          "holiday" = Holiday,
+          "func_day" = `Functioning Day`
+  ) |>
+  mutate(
+    date = lubridate::dmy(date), #convert previous date variable to lubridate dmy date
+    season_f = factor(season, levels = c('Winter', 'Spring', 'Summer', 'Autumn')),
+    holiday_f = factor(holiday, levels = c('Holiday', 'No Holiday')),
+    func_day_f = factor(func_day, levels = c('Yes', 'No'),
+                        labels = c('Fun(Functional Hours)','NoFunc(Non Functional Hours)'))
+  )
+```
+
+## Initial summary tables
+
+The describe function from the psych package will show basic numeric descriptive statistics for numeric variables. In this context, the descriptive statistics for date are not meaningful.
+
+```{r}
+
+psych::describe(bike_full_clean)
+```
+
+Rented Bike Count is our response variable we're trying to predict so the next step will be to look at this variables distribution across the levels of our categorical variables. We will create a list of named functions and pass that list to a summarize(across( function, then to a summary_stats function we can use purrr::map() on across variables.
+
+```{r}
+#Measures of Spread 
+#practice creating function and running across multiple columns with purrr:map
+
+#create summary_stats function
+summary_stats <- function(ds,group_var,num_var){
+  
+fxlist <- list("mean" = mean, "median" = median, "min" = min, "max" = max, "sd" = sd)  
+
+ds |> 
+ group_by(.data[[group_var]])|> 
+ summarize(rowcount = n(),across(num_var,.fns = fxlist,.names = "{.col}_{.fn}")) 
+}
+
+#categorical variables of interest
+cat_vars <- list('season', 'holiday', 'func_day')
+
+#obtain summary_stats for each variable in cat_vars and make 'count' the numeric variable of interest
+map(cat_vars, \(x) summary_stats(bike_full_clean, group_var = x, num_var = 'count'))
+
+```
+
+## Subset data
+
+It is clear from these results that there is no bike usage on func_day = "no" and those records can be removed from the data.
+
+```{r}
+bike_subset_clean <- bike_full_clean |>
+                      filter(func_day == "Yes")
+```
+
+## New Data
+
+These data will be aggregated across hours at the day level
+
+```{r}
+
+modeldata <- bike_subset_clean |>
+  group_by(date,season_f, holiday_f) |>
+  summarize(
+    count = sum(count),
+    sum_rain = sum(rain),
+    sum_snow = sum(snow),
+    avg_rain = mean(rain),
+    avg_snow = mean(snow),
+    avg_temp = mean(temp),
+    avg_humid = mean(humid),
+    avg_wind = mean(wind),
+    avg_vis = mean(vis),
+    avg_dew = mean(dew),
+    avg_rad = mean(rad)
+  )
+```
+
+Now we will create new summary statistics and plots using the new 'modeldata' dataset.
+
+```{r}
+
+#average temps by season
+
+tempxseason <- modeldata |>
+  group_by(season_f) |>
+  summarize(AvgTemp = mean(avg_temp))
+tempxseason
+
+#average daily rental counts by season and holiday status
+
+riderxseason <- modeldata |>
+  group_by(season_f, holiday_f) |>
+  summarize(riders = sum(count),
+            days = n(),
+            avg_daily_riders = riders/days)
+
+riderxseason
+
+#plot total precipitation against humidity - group and panel by season
+#create total precipitation variable - avg_rain(mm) + avg_snow(cm). Will convert cm to mm. 
+
+modeldata$avg_total_precip <- (modeldata$avg_rain + (modeldata$avg_snow*10))
+
+#overall plot
+ggplot(modeldata, aes(x = avg_humid, y = avg_total_precip)) +
+  geom_point()+
+  labs(title = "Total Precipitation (mm) by Humidity", x = "Humidity", y = "Precipitation (mm)") +
+  theme_minimal()
+  
+#with paneling by season
+ggplot(modeldata, aes(x = avg_humid, y = avg_total_precip, fill = season_f)) +
+  geom_point()+
+  labs(title = "Total Precipitation (mm) by Humidity and Season", x = "Humidity", y = "Precipitation (mm)") +
+  facet_wrap(~ season_f, nrow = 2, scales = "free_y") +
+  theme_minimal()
+```
