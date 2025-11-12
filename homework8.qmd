@@ -15,7 +15,9 @@ library(purrr)
 library(stringr)
 library(psych)
 library(tidymodels)
+library(rsample)
 library(skimr)
+
 ```
 
 This is a simple reading of a CSV file from a hyperlink but for a data encoding mismatch that must be handled via the locale = argument. The dataframe I will use before any subsetting or cleaning will be named 'bike_full'.
@@ -196,6 +198,30 @@ ggplot(modeldata, aes(x = avg_humid, y = avg_total_precip, fill = season_f)) +
 
 # Fitting MLR Models
 
-I will now create the model fit and perform model preparation steps using a recipe.
+I will now create the model fit and perform model preparation steps using a recipe. The modeldata must also be split in such a way that 3/4 of the data records are in the training data set and 1/4 of the data records are in the testing data set. This technique of splitting lets us easily test or models and help ensure they are generalizable.
 
-## 1st recipe
+## Split Data
+
+```{r}
+#remove previously calculated precipitation variable
+modeldata$avg_total_precip <- NULL
+
+#perform split
+bike_split <- rsample::initial_split(modeldata, prop = .75)
+bike_train <- rsample::training(bike_split)
+bike_test <- rsample::testing(bike_split)
+```
+
+## Recipe 1
+
+```{r}
+rec_1 <- recipe(count ~ ., data = bike_train) |>
+  recipes::step_date(date, "dow") 
+tidy(rec_1)
+
+|> 
+  step_mutate(
+              weekday = if_else()
+              
+              )
+```
