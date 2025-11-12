@@ -14,7 +14,8 @@ library(dplyr)
 library(purrr)
 library(stringr)
 library(psych)
-#library(tidymodels)
+library(tidymodels)
+library(skimr)
 ```
 
 This is a simple reading of a CSV file from a hyperlink but for a data encoding mismatch that must be handled via the locale = argument. The dataframe I will use before any subsetting or cleaning will be named 'bike_full'.
@@ -193,4 +194,8 @@ ggplot(modeldata, aes(x = avg_humid, y = avg_total_precip, fill = season_f)) +
   theme_light()
 ```
 
-## 
+# Fitting MLR Models
+
+I will now create the model fit and perform model preparation steps using a recipe.
+
+## 1st recipe
