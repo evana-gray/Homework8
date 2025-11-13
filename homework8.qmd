@@ -217,8 +217,8 @@ bike_test <- rsample::testing(bike_split)
 This recipe requires the creation of a weekday factor, normalizing all non-outcome numeric variables, creating dummy variables.
 
 ```{r}
-rec_1 <- recipe(count ~ all_numeric_predictors(), data = bike_train) |>
-  step_date(date, "dow") |> 
+rec_1 <- recipe(count ~ ., data = bike_train) |>
+  step_date(date, features = "dow") |> 
   update_role(count, new_role = "outcome") |>
   update_role(date, new_role = "ID") |>
   step_mutate(weekday_flag = factor(
@@ -234,11 +234,12 @@ rec_1 <- recipe(count ~ all_numeric_predictors(), data = bike_train) |>
 
 ## Recipe 2
 
-This recipe explicitly adds interaction terms
+This recipe explicitly adds interaction terms seasons by holiday, seasons by avg temp, and avg temp by avg rain.
 
 ```{r}
-rec_1 <- recipe(count ~ . + (season_f:holiday_f) + (season_f:avg_temp) + (avg_temp:avg_rain), data = bike_train) |>
-  step_date(date, "dow") |> 
+#reference https://recipes.tidymodels.org/reference.html for step_interact
+rec_1 <- recipe(count ~ ., data = bike_train) |>
+  step_date(date, features = "dow") |> 
   update_role(count, new_role = "outcome") |>
   update_role(date, new_role = "ID") |>
   step_mutate(weekday_flag = factor(
@@ -248,5 +249,29 @@ rec_1 <- recipe(count ~ . + (season_f:holiday_f) + (season_f:avg_temp) + (avg_te
                )
               ) |>
   step_normalize(all_numeric(), -all_outcomes()) |>
-  step_dummy(season_f, holiday_f, weekday_flag)
+  step_dummy(season_f, holiday_f, weekday_flag) |>
+  step_interact(terms = ~ seasons_f:holiday_f + seasons_f:avg_temp + avg_temp:avg_rain)
+```
+
+## Recipe 3
+
+This recipe explicitly adds polynomial terms for all numeric variables
+
+```{r}
+
+#reference https://recipes.tidymodels.org/reference.html for step_poly
+rec_1 <- recipe(count ~ ., data = bike_train) |>
+  step_date(date, features = "dow") |> 
+  update_role(count, new_role = "outcome") |>
+  update_role(date, new_role = "ID") |>
+  step_mutate(weekday_flag = factor(
+              if_else(datedow %in% c("saturday","sunday"),0,1),
+               levels = c(0,1),
+               labels = c("weekend","weekday")
+               )
+              ) |>
+  step_normalize(all_numeric(), -all_outcomes()) |>
+  step_dummy(season_f, holiday_f, weekday_flag) |>
+  step_interact(terms = ~ seasons_f:holiday_f + seasons_f:avg_temp + avg_temp:avg_rain) |>
+  step_poly(all_numeric())
 ```
