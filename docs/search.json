@@ -1,0 +1,134 @@
+[
+  {
+    "objectID": "homework8.html",
+    "href": "homework8.html",
+    "title": "Homework8",
+    "section": "",
+    "text": "In this homework I will investigate factors that influence bike share usage. The data set is courtesy of the UC Irvine Machine Learning Repository, it tracks bike share utilization across specific days and hours with additional variables relating to weather. There are also variables telling us if a given day was a holiday or functioning (working) day.\n\nlibrary(tidyverse)\n\nWarning: package 'tidyverse' was built under R version 4.4.3\n\n\nWarning: package 'ggplot2' was built under R version 4.4.3\n\n\nWarning: package 'tidyr' was built under R version 4.4.3\n\n\nWarning: package 'readr' was built under R version 4.4.3\n\n\nWarning: package 'dplyr' was built under R version 4.4.3\n\n\nWarning: package 'stringr' was built under R version 4.4.3\n\n\nWarning: package 'forcats' was built under R version 4.4.3\n\n\nWarning: package 'lubridate' was built under R version 4.4.3\n\n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.1.4     ✔ readr     2.1.5\n✔ forcats   1.0.0     ✔ stringr   1.5.1\n✔ ggplot2   4.0.0     ✔ tibble    3.2.1\n✔ lubridate 1.9.4     ✔ tidyr     1.3.1\n✔ purrr     1.0.2     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors\n\nlibrary(dplyr)\nlibrary(purrr)\nlibrary(stringr)\nlibrary(psych)\n\nWarning: package 'psych' was built under R version 4.4.3\n\n\n\nAttaching package: 'psych'\n\nThe following objects are masked from 'package:ggplot2':\n\n    %+%, alpha\n\nlibrary(tidymodels)\n\nWarning: package 'tidymodels' was built under R version 4.4.3\n\n\n── Attaching packages ────────────────────────────────────── tidymodels 1.4.1 ──\n✔ broom        1.0.9     ✔ rsample      1.3.1\n✔ dials        1.4.2     ✔ tailor       0.1.0\n✔ infer        1.0.9     ✔ tune         2.0.1\n✔ modeldata    1.5.1     ✔ workflows    1.3.0\n✔ parsnip      1.3.3     ✔ workflowsets 1.1.1\n✔ recipes      1.3.1     ✔ yardstick    1.3.2\n\n\nWarning: package 'broom' was built under R version 4.4.3\n\n\nWarning: package 'dials' was built under R version 4.4.3\n\n\nWarning: package 'scales' was built under R version 4.4.3\n\n\nWarning: package 'infer' was built under R version 4.4.3\n\n\nWarning: package 'modeldata' was built under R version 4.4.3\n\n\nWarning: package 'parsnip' was built under R version 4.4.3\n\n\nWarning: package 'recipes' was built under R version 4.4.3\n\n\nWarning: package 'rsample' was built under R version 4.4.3\n\n\nWarning: package 'tailor' was built under R version 4.4.3\n\n\nWarning: package 'tune' was built under R version 4.4.3\n\n\nWarning: package 'workflows' was built under R version 4.4.3\n\n\nWarning: package 'workflowsets' was built under R version 4.4.3\n\n\nWarning: package 'yardstick' was built under R version 4.4.3\n\n\n── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──\n✖ psych::%+%()      masks ggplot2::%+%()\n✖ scales::alpha()   masks psych::alpha(), ggplot2::alpha()\n✖ scales::discard() masks purrr::discard()\n✖ dplyr::filter()   masks stats::filter()\n✖ recipes::fixed()  masks stringr::fixed()\n✖ dplyr::lag()      masks stats::lag()\n✖ yardstick::spec() masks readr::spec()\n✖ recipes::step()   masks stats::step()\n\nlibrary(rsample)\nlibrary(skimr)\n\nWarning: package 'skimr' was built under R version 4.4.3\n\n\nThis is a simple reading of a CSV file from a hyperlink but for a data encoding mismatch that must be handled via the locale = argument. The dataframe I will use before any subsetting or cleaning will be named ‘bike_full’.\n\nbike_full &lt;- read_csv(\"https://www4.stat.ncsu.edu/~online/datasets/SeoulBikeData.csv\", locale = (locale(encoding = \"latin1\")))\n\nRows: 8760 Columns: 14\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (4): Date, Seasons, Holiday, Functioning Day\ndbl (10): Rented Bike Count, Hour, Temperature(°C), Humidity(%), Wind speed ...\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#create-factors-and-rename-variables",
+    "href": "homework8.html#create-factors-and-rename-variables",
+    "title": "Homework8",
+    "section": "Create factors and rename variables",
+    "text": "Create factors and rename variables\nThis step renames variables to shorten, remove capitalization, non letter characters, and spaces. To preserve old data a new data set is created.\n\nbike_full_clean &lt;- bike_full |&gt;\n  rename( \"date\" = Date,\n          \"count\" = `Rented Bike Count`,\n          \"hour\" = Hour,\n          \"temp\" = `Temperature(°C)`,\n          \"humid\" = `Humidity(%)`,\n          \"wind\" = `Wind speed (m/s)`,\n          \"vis\" = `Visibility (10m)`,\n          \"dew\" = `Dew point temperature(°C)`,\n          \"rad\" = `Solar Radiation (MJ/m2)`,\n          \"rain\" = `Rainfall(mm)`,\n          \"snow\" = `Snowfall (cm)`,\n          \"season\" = Seasons,\n          \"holiday\" = Holiday,\n          \"func_day\" = `Functioning Day`\n  ) |&gt;\n  mutate(\n    date = lubridate::dmy(date), #convert previous date variable to lubridate dmy date\n    season_f = factor(season, levels = c('Winter', 'Spring', 'Summer', 'Autumn')),\n    holiday_f = factor(holiday, levels = c('Holiday', 'No Holiday')),\n    func_day_f = factor(func_day, levels = c('Yes', 'No'),\n                        labels = c('Fun(Functional Hours)','NoFunc(Non Functional Hours)'))\n  )",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#initial-summary-tables",
+    "href": "homework8.html#initial-summary-tables",
+    "title": "Homework8",
+    "section": "Initial summary tables",
+    "text": "Initial summary tables\nThe describe function from the psych package will show basic numeric descriptive statistics for numeric variables. In this context, the descriptive statistics for date are not meaningful.\n\npsych::describe(bike_full_clean)\n\nWarning in FUN(newX[, i], ...): no non-missing arguments to min; returning Inf\n\n\nWarning in FUN(newX[, i], ...): no non-missing arguments to max; returning -Inf\n\n\n            vars    n    mean     sd  median trimmed    mad   min     max\ndate           1 8760     NaN     NA      NA     NaN     NA   Inf    -Inf\ncount          2 8760  704.60 645.00  504.50  612.58 553.75   0.0 3556.00\nhour           3 8760   11.50   6.92   11.50   11.50   8.90   0.0   23.00\ntemp           4 8760   12.88  11.94   13.70   13.19  13.94 -17.8   39.40\nhumid          5 8760   58.23  20.36   57.00   58.02  23.72   0.0   98.00\nwind           6 8760    1.72   1.04    1.50    1.63   1.04   0.0    7.40\nvis            7 8760 1436.83 608.30 1698.00 1509.50 447.75  27.0 2000.00\ndew            8 8760    4.07  13.06    5.10    4.76  14.38 -30.6   27.20\nrad            9 8760    0.57   0.87    0.01    0.38   0.01   0.0    3.52\nrain          10 8760    0.15   1.13    0.00    0.00   0.00   0.0   35.00\nsnow          11 8760    0.08   0.44    0.00    0.00   0.00   0.0    8.80\nseason*       12 8760    2.50   1.11    2.00    2.49   1.48   1.0    4.00\nholiday*      13 8760    1.95   0.22    2.00    2.00   0.00   1.0    2.00\nfunc_day*     14 8760    1.97   0.18    2.00    2.00   0.00   1.0    2.00\nseason_f*     15 8760    2.50   1.11    3.00    2.51   1.48   1.0    4.00\nholiday_f*    16 8760    1.95   0.22    2.00    2.00   0.00   1.0    2.00\nfunc_day_f*   17 8760    1.03   0.18    1.00    1.00   0.00   1.0    2.00\n              range  skew kurtosis   se\ndate           -Inf    NA       NA   NA\ncount       3556.00  1.15     0.85 6.89\nhour          23.00  0.00    -1.20 0.07\ntemp          57.20 -0.20    -0.84 0.13\nhumid         98.00  0.06    -0.80 0.22\nwind           7.40  0.89     0.73 0.01\nvis         1973.00 -0.70    -0.96 6.50\ndew           57.80 -0.37    -0.76 0.14\nrad            3.52  1.50     1.12 0.01\nrain          35.00 14.53   284.76 0.01\nsnow           8.80  8.44    93.73 0.00\nseason*        3.00  0.00    -1.35 0.01\nholiday*       1.00 -4.16    15.33 0.00\nfunc_day*      1.00 -5.17    24.72 0.00\nseason_f*      3.00  0.00    -1.35 0.01\nholiday_f*     1.00 -4.16    15.33 0.00\nfunc_day_f*    1.00  5.17    24.72 0.00\n\n\nRented Bike Count is our response variable we’re trying to predict so the next step will be to look at this variables distribution across the levels of our categorical variables. We will create a list of named functions and pass that list to a summarize(across( function, then to a summary_stats function we can use purrr::map() on across variables.\n\n#Measures of Spread \n#practice creating function and running across multiple columns with purrr:map\n\n#create summary_stats function\nsummary_stats &lt;- function(ds,group_var,num_var){\n  \nfxlist &lt;- list(\"mean\" = mean, \"median\" = median, \"min\" = min, \"max\" = max, \"sd\" = sd)  \n\nds |&gt; \n group_by(.data[[group_var]])|&gt; \n summarize(rowcount = n(),across(num_var,.fns = fxlist,.names = \"{.col}_{.fn}\")) \n}\n\n#categorical variables of interest\ncat_vars &lt;- list('season', 'holiday', 'func_day')\n\n#obtain summary_stats for each variable in cat_vars and make 'count' the numeric variable of interest\nmap(cat_vars, \\(x) summary_stats(bike_full_clean, group_var = x, num_var = 'count'))\n\nWarning: There was 1 warning in `summarize()`.\nℹ In argument: `across(num_var, .fns = fxlist, .names = \"{.col}_{.fn}\")`.\nCaused by warning:\n! Using an external vector in selections was deprecated in tidyselect 1.1.0.\nℹ Please use `all_of()` or `any_of()` instead.\n  # Was:\n  data %&gt;% select(num_var)\n\n  # Now:\n  data %&gt;% select(all_of(num_var))\n\nSee &lt;https://tidyselect.r-lib.org/reference/faq-external-vector.html&gt;.\n\n\n[[1]]\n# A tibble: 4 × 7\n  season rowcount count_mean count_median count_min count_max count_sd\n  &lt;chr&gt;     &lt;int&gt;      &lt;dbl&gt;        &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;\n1 Autumn     2184       820.         764.         0      3298     651.\n2 Spring     2208       730.         583          0      3251     622.\n3 Summer     2208      1034.         906.         9      3556     690.\n4 Winter     2160       226.         203          3       937     150.\n\n[[2]]\n# A tibble: 2 × 7\n  holiday    rowcount count_mean count_median count_min count_max count_sd\n  &lt;chr&gt;         &lt;int&gt;      &lt;dbl&gt;        &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;\n1 Holiday         432       500.         240          0      2400     571.\n2 No Holiday     8328       715.         524.         0      3556     647.\n\n[[3]]\n# A tibble: 2 × 7\n  func_day rowcount count_mean count_median count_min count_max count_sd\n  &lt;chr&gt;       &lt;int&gt;      &lt;dbl&gt;        &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;\n1 No            295         0             0         0         0       0 \n2 Yes          8465       729.          542         2      3556     642.",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#subset-data",
+    "href": "homework8.html#subset-data",
+    "title": "Homework8",
+    "section": "Subset data",
+    "text": "Subset data\nIt is clear from these results that there is no bike usage on func_day = “no” and those records can be removed from the data.\n\nbike_subset_clean &lt;- bike_full_clean |&gt;\n                      filter(func_day == \"Yes\")",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#new-data",
+    "href": "homework8.html#new-data",
+    "title": "Homework8",
+    "section": "New Data",
+    "text": "New Data\nThese data will be aggregated across hours at the day level\n\nmodeldata &lt;- bike_subset_clean |&gt;\n  group_by(date, season_f, holiday_f) |&gt;\n  summarize(\n    count = sum(count),\n    sum_rain = sum(rain),\n    sum_snow = sum(snow),\n    avg_rain = mean(rain),\n    avg_snow = mean(snow),\n    avg_temp = mean(temp),\n    avg_humid = mean(humid),\n    avg_wind = mean(wind),\n    avg_vis = mean(vis),\n    avg_dew = mean(dew),\n    avg_rad = mean(rad),\n    .groups = 'drop' #grouping was creating issues with future analyses\n  )",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#correlation-matrix",
+    "href": "homework8.html#correlation-matrix",
+    "title": "Homework8",
+    "section": "Correlation Matrix",
+    "text": "Correlation Matrix\nHere we will create a correlation matrix among numeric “avg_” variables in the dataset.\n\nmodeldata |&gt; \n  select(starts_with(\"avg\")) |&gt; \n  cor() \n\n             avg_rain    avg_snow     avg_temp   avg_humid    avg_wind\navg_rain   1.00000000 -0.02360438  0.144573425  0.52795952 -0.09863450\navg_snow  -0.02360438  1.00000000 -0.266963662  0.06539191  0.02088156\navg_temp   0.14457343 -0.26696366  1.000000000  0.40416749 -0.26072179\navg_humid  0.52795952  0.06539191  0.404167486  1.00000000 -0.23425778\navg_wind  -0.09863450  0.02088156 -0.260721792 -0.23425778  1.00000000\navg_vis   -0.21823638 -0.10188902  0.002336683 -0.55917733  0.20602264\navg_dew    0.26449127 -0.20955286  0.962796255  0.63204729 -0.28770322\navg_rad   -0.32079734 -0.23343056  0.550274301 -0.27444967  0.09612635\n               avg_vis    avg_dew     avg_rad\navg_rain  -0.218236382  0.2644913 -0.32079734\navg_snow  -0.101889019 -0.2095529 -0.23343056\navg_temp   0.002336683  0.9627963  0.55027430\navg_humid -0.559177334  0.6320473 -0.27444967\navg_wind   0.206022636 -0.2877032  0.09612635\navg_vis    1.000000000 -0.1535516  0.27139591\navg_dew   -0.153551591  1.0000000  0.38315713\navg_rad    0.271395906  0.3831571  1.00000000\n\n\nNow we will create new summary statistics and plots using the new ‘modeldata’ dataset.\n\n#average temps by season\n\ntempxseason &lt;- modeldata |&gt;\n  group_by(season_f) |&gt;\n  summarize(AvgTemp = mean(avg_temp))\ntempxseason\n\n# A tibble: 4 × 2\n  season_f AvgTemp\n  &lt;fct&gt;      &lt;dbl&gt;\n1 Winter     -2.54\n2 Spring     13.0 \n3 Summer     26.6 \n4 Autumn     13.8 \n\n#average daily rental counts by season and holiday status\n\nriderxseason &lt;- modeldata |&gt;\n  group_by(season_f, holiday_f) |&gt;\n  summarize(riders = sum(count),\n            days = n(),\n            avg_daily_riders = riders/days)\n\n`summarise()` has grouped output by 'season_f'. You can override using the\n`.groups` argument.\n\nriderxseason\n\n# A tibble: 8 × 5\n# Groups:   season_f [4]\n  season_f holiday_f   riders  days avg_daily_riders\n  &lt;fct&gt;    &lt;fct&gt;        &lt;dbl&gt; &lt;int&gt;            &lt;dbl&gt;\n1 Winter   Holiday      30072     8            3759 \n2 Winter   No Holiday  457097    82            5574.\n3 Spring   Holiday      45742     3           15247.\n4 Spring   No Holiday 1566167    87           18002.\n5 Summer   Holiday      49063     2           24532.\n6 Summer   No Holiday 2234171    90           24824.\n7 Autumn   Holiday      91018     4           22754.\n8 Autumn   No Holiday 1698984    77           22065.\n\n#plot total precipitation against humidity - group and panel by season\n#create total precipitation variable - avg_rain(mm) + avg_snow(cm). Will convert cm to mm. \n\nmodeldata$avg_total_precip &lt;- (modeldata$avg_rain + (modeldata$avg_snow*10))\n\n#overall plot\nggplot(modeldata, aes(x = avg_humid, y = avg_total_precip)) +\n  geom_point()+\n  labs(title = \"Total Precipitation (mm) by Humidity\", x = \"Humidity\", y = \"Precipitation (mm)\") +\n  theme_light()\n\n\n\n\n\n\n\n#with faceting by season\nggplot(modeldata, aes(x = avg_humid, y = avg_total_precip, fill = season_f)) +\n  geom_point()+\n  labs(title = \"Total Precipitation (mm) by Humidity and Season\", x = \"Humidity\", y = \"Precipitation (mm)\") +\n  facet_wrap(~ season_f, nrow = 2, scales = \"free_y\") +\n  theme_light()",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#split-data",
+    "href": "homework8.html#split-data",
+    "title": "Homework8",
+    "section": "Split Data",
+    "text": "Split Data\n\n#remove previously calculated precipitation variable\nmodeldata$avg_total_precip &lt;- NULL\n\n#perform split\nbike_split &lt;- rsample::initial_split(modeldata, prop = .75)\nbike_train &lt;- rsample::training(bike_split)\nbike_test &lt;- rsample::testing(bike_split)",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#recipe-1",
+    "href": "homework8.html#recipe-1",
+    "title": "Homework8",
+    "section": "Recipe 1",
+    "text": "Recipe 1\nThis recipe requires the creation of a weekday factor, normalizing all non-outcome numeric variables, creating dummy variables.\n\nrec_1 &lt;- recipe(count ~ ., data = bike_train) |&gt;\n  step_date(date, features = \"dow\") |&gt; \n  update_role(count, new_role = \"outcome\") |&gt;\n  update_role(date, new_role = \"ID\") |&gt;\n  step_mutate(weekday_flag = factor(\n              if_else(date_dow %in% c(\"saturday\",\"sunday\"),0,1),\n               levels = c(0,1),\n               labels = c(\"weekend\",\"weekday\")\n               )\n              ) |&gt;\n  step_normalize(all_numeric(), -all_outcomes()) |&gt;\n  step_dummy(season_f, holiday_f, weekday_flag)",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#recipe-2",
+    "href": "homework8.html#recipe-2",
+    "title": "Homework8",
+    "section": "Recipe 2",
+    "text": "Recipe 2\nThis recipe explicitly adds interaction terms seasons by holiday, seasons by avg temp, and avg temp by avg rain.\n\n#reference https://recipes.tidymodels.org/reference.html for step_interact\nrec_2 &lt;- recipe(count ~ ., data = bike_train) |&gt;\n  step_date(date, features = \"dow\") |&gt; \n  update_role(count, new_role = \"outcome\") |&gt;\n  update_role(date, new_role = \"ID\") |&gt;\n  step_mutate(weekday_flag = factor(\n              if_else(date_dow %in% c(\"saturday\",\"sunday\"),0,1),\n               levels = c(0,1),\n               labels = c(\"weekend\",\"weekday\")\n               )\n              ) |&gt;\n  step_normalize(all_numeric(), -all_outcomes()) |&gt;\n  step_dummy(season_f, holiday_f, weekday_flag) |&gt;\n  step_interact(terms = ~ season_f:holiday_f + season_f:avg_temp + avg_temp:avg_rain)",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#recipe-3",
+    "href": "homework8.html#recipe-3",
+    "title": "Homework8",
+    "section": "Recipe 3",
+    "text": "Recipe 3\nThis recipe explicitly adds polynomial terms for all numeric variables\n\n#reference https://recipes.tidymodels.org/reference.html for step_poly\nrec_3 &lt;- recipe(count ~ ., data = bike_train) |&gt;\n  step_date(date, features = \"dow\") |&gt; \n  update_role(count, new_role = \"outcome\") |&gt;\n  update_role(date, new_role = \"ID\") |&gt;\n  step_mutate(weekday_flag = factor(\n              if_else(date_dow %in% c(\"saturday\",\"sunday\"),0,1),\n               levels = c(0,1),\n               labels = c(\"weekend\",\"weekday\")\n               )\n              ) |&gt;\n  step_normalize(all_numeric(), -all_outcomes()) |&gt;\n  step_dummy(season_f, holiday_f, weekday_flag) |&gt;\n  step_interact(terms = ~ season_f:holiday_f + season_f:avg_temp + avg_temp:avg_rain) |&gt;\n  step_poly(all_numeric())",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#model-preparation",
+    "href": "homework8.html#model-preparation",
+    "title": "Homework8",
+    "section": "Model preparation",
+    "text": "Model preparation\nHere I create the model using linear_reg() with “lm” engine, our workflows for each of the three recipes, and prepare the cross-validation folds.\n\n#create the model\nbike_rec_mod &lt;- linear_reg() |&gt; set_engine(\"lm\")\n\n#create workflows\nwflow1 &lt;- workflow() |&gt;\n  add_recipe(rec_1) |&gt;\n  add_model(bike_rec_mod)\n\nwflow2 &lt;- workflow() |&gt;\n  add_recipe(rec_2) |&gt;\n  add_model(bike_rec_mod)\n\nwflow3 &lt;- workflow() |&gt;\n  add_recipe(rec_3) |&gt;\n  add_model(bike_rec_mod)\n\n#cross validation folds\ncreatefold &lt;- vfold_cv(bike_train, 10)",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  },
+  {
+    "objectID": "homework8.html#run-models-on-cv-fold-splits",
+    "href": "homework8.html#run-models-on-cv-fold-splits",
+    "title": "Homework8",
+    "section": "Run Models on CV fold splits",
+    "text": "Run Models on CV fold splits\nHere is where we train our models against the training data samples. Only the modelfits1 populates properly, debugging the other two are a work in progress. However, for modelfits1 we can see the root mean square error (rmse) and r-squared (rsq) associated with the model’s fit.\n\nmodelfits1 &lt;- wflow1 |&gt;\n  fit_resamples(createfold) \n\n→ A | warning: prediction from rank-deficient fit; consider predict(., rankdeficient=\"NA\")\n\n\nThere were issues with some computations   A: x1\n\n\nThere were issues with some computations   A: x3\n\n\nThere were issues with some computations   A: x4\n\n\nThere were issues with some computations   A: x6\n\n\nThere were issues with some computations   A: x8\n\n\nThere were issues with some computations   A: x10\nThere were issues with some computations   A: x10\n\n\n\n\n#can't get running\nmodelfits2 &lt;- wflow2 |&gt;\n  fit_resamples(createfold) \n\n→ A | warning: ! Interaction specification failed for:\n               • ~season_f:holiday_f + season_f:avg_temp + avg_temp:avg_rain\n               ℹ No interactions will be created\n\n\n→ B | error:   Error in `step_interact()`:\n               Caused by error in `rlang::f_rhs()`:\n               ! `x` must be a formula\n\n\nThere were issues with some computations   A: x1   B: x1\n\n\nThere were issues with some computations   A: x3   B: x3\n\n\nThere were issues with some computations   A: x4   B: x4\n\n\nThere were issues with some computations   A: x6   B: x6\n\n\nThere were issues with some computations   A: x8   B: x8\n\n\nThere were issues with some computations   A: x10   B: x10\n\n\nWarning: All models failed. Run `show_notes(.Last.tune.result)` for more\ninformation.\n\n\nThere were issues with some computations   A: x10   B: x10\n\n\n\n\n#can't get running \nmodelfits3 &lt;- wflow3 |&gt; \n  fit_resamples(createfold) \n\n→ A | warning: ! Interaction specification failed for:\n               • ~season_f:holiday_f + season_f:avg_temp + avg_temp:avg_rain\n               ℹ No interactions will be created\n\n\n→ B | error:   Error in `step_interact()`:\n               Caused by error in `rlang::f_rhs()`:\n               ! `x` must be a formula\n\n\nThere were issues with some computations   A: x1   B: x1\n\n\nThere were issues with some computations   A: x2   B: x2\n\n\nThere were issues with some computations   A: x4   B: x4\n\n\nThere were issues with some computations   A: x5   B: x5\n\n\nThere were issues with some computations   A: x7   B: x7\n\n\nThere were issues with some computations   A: x8   B: x8\n\n\nThere were issues with some computations   A: x9   B: x9\n\n\nWarning: All models failed. Run `show_notes(.Last.tune.result)` for more\ninformation.\n\n\nThere were issues with some computations   A: x10   B: x10\n\n\n\n\nmodelfits1 |&gt; collect_metrics()\n\n# A tibble: 2 × 6\n  .metric .estimator     mean     n  std_err .config        \n  &lt;chr&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;int&gt;    &lt;dbl&gt; &lt;chr&gt;          \n1 rmse    standard   4295.       10 174.     pre0_mod0_post0\n2 rsq     standard      0.830    10   0.0118 pre0_mod0_post0\n\n#modelfits2 |&gt; collect_metrics()\n#modelfits3 |&gt; collect_metrics()",
+    "crumbs": [
+      "Home",
+      "Homework8"
+    ]
+  }
+]
