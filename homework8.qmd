@@ -214,14 +214,39 @@ bike_test <- rsample::testing(bike_split)
 
 ## Recipe 1
 
-```{r}
-rec_1 <- recipe(count ~ ., data = bike_train) |>
-  recipes::step_date(date, "dow") 
-tidy(rec_1)
+This recipe requires the creation of a weekday factor, normalizing all non-outcome numeric variables, creating dummy variables.
 
-|> 
-  step_mutate(
-              weekday = if_else()
-              
-              )
+```{r}
+rec_1 <- recipe(count ~ all_numeric_predictors(), data = bike_train) |>
+  step_date(date, "dow") |> 
+  update_role(count, new_role = "outcome") |>
+  update_role(date, new_role = "ID") |>
+  step_mutate(weekday_flag = factor(
+              if_else(datedow %in% c("saturday","sunday"),0,1),
+               levels = c(0,1),
+               labels = c("weekend","weekday")
+               )
+              ) |>
+  step_normalize(all_numeric(), -all_outcomes()) |>
+  step_dummy(season_f, holiday_f, weekday_flag)
+
+```
+
+## Recipe 2
+
+This recipe explicitly adds interaction terms
+
+```{r}
+rec_1 <- recipe(count ~ . + (season_f:holiday_f) + (season_f:avg_temp) + (avg_temp:avg_rain), data = bike_train) |>
+  step_date(date, "dow") |> 
+  update_role(count, new_role = "outcome") |>
+  update_role(date, new_role = "ID") |>
+  step_mutate(weekday_flag = factor(
+              if_else(datedow %in% c("saturday","sunday"),0,1),
+               levels = c(0,1),
+               labels = c("weekend","weekday")
+               )
+              ) |>
+  step_normalize(all_numeric(), -all_outcomes()) |>
+  step_dummy(season_f, holiday_f, weekday_flag)
 ```
