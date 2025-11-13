@@ -1,0 +1,36 @@
+project:
+  type: website
+  output-dir: docs
+  render: 
+    - homework8.qmd
+
+    
+website:
+  title: "Homework 8 - Model Practice"
+  navbar:
+    background: primary
+    left:
+      - href: homework8.qmd
+        text: Home
+  sidebar:
+    style: "docked"
+    search: true
+    collapse-level: 1
+    contents:
+      - homework8.qmd
+
+  page-navigation: true
+  reader-mode: true
+
+format:
+  html:
+    theme: flatly
+    css: styles.css
+    toc: true
+    grid:
+      sidebar-width: 300px
+
+callout-appearance: simple
+
+date: today
+date-format: iso

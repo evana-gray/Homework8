@@ -222,7 +222,7 @@ rec_1 <- recipe(count ~ ., data = bike_train) |>
   update_role(count, new_role = "outcome") |>
   update_role(date, new_role = "ID") |>
   step_mutate(weekday_flag = factor(
-              if_else(datedow %in% c("saturday","sunday"),0,1),
+              if_else(date_dow %in% c("saturday","sunday"),0,1),
                levels = c(0,1),
                labels = c("weekend","weekday")
                )
@@ -238,19 +238,19 @@ This recipe explicitly adds interaction terms seasons by holiday, seasons by avg
 
 ```{r}
 #reference https://recipes.tidymodels.org/reference.html for step_interact
-rec_1 <- recipe(count ~ ., data = bike_train) |>
+rec_2 <- recipe(count ~ ., data = bike_train) |>
   step_date(date, features = "dow") |> 
   update_role(count, new_role = "outcome") |>
   update_role(date, new_role = "ID") |>
   step_mutate(weekday_flag = factor(
-              if_else(datedow %in% c("saturday","sunday"),0,1),
+              if_else(date_dow %in% c("saturday","sunday"),0,1),
                levels = c(0,1),
                labels = c("weekend","weekday")
                )
               ) |>
   step_normalize(all_numeric(), -all_outcomes()) |>
   step_dummy(season_f, holiday_f, weekday_flag) |>
-  step_interact(terms = ~ seasons_f:holiday_f + seasons_f:avg_temp + avg_temp:avg_rain)
+  step_interact(terms = ~ season_f:holiday_f + season_f:avg_temp + avg_temp:avg_rain)
 ```
 
 ## Recipe 3
@@ -260,18 +260,68 @@ This recipe explicitly adds polynomial terms for all numeric variables
 ```{r}
 
 #reference https://recipes.tidymodels.org/reference.html for step_poly
-rec_1 <- recipe(count ~ ., data = bike_train) |>
+rec_3 <- recipe(count ~ ., data = bike_train) |>
   step_date(date, features = "dow") |> 
   update_role(count, new_role = "outcome") |>
   update_role(date, new_role = "ID") |>
   step_mutate(weekday_flag = factor(
-              if_else(datedow %in% c("saturday","sunday"),0,1),
+              if_else(date_dow %in% c("saturday","sunday"),0,1),
                levels = c(0,1),
                labels = c("weekend","weekday")
                )
               ) |>
   step_normalize(all_numeric(), -all_outcomes()) |>
   step_dummy(season_f, holiday_f, weekday_flag) |>
-  step_interact(terms = ~ seasons_f:holiday_f + seasons_f:avg_temp + avg_temp:avg_rain) |>
+  step_interact(terms = ~ season_f:holiday_f + season_f:avg_temp + avg_temp:avg_rain) |>
   step_poly(all_numeric())
+```
+
+## Model preparation
+
+Here I create the model using linear_reg() with "lm" engine, our workflows for each of the three recipes, and prepare the cross-validation folds.
+
+```{r}
+
+#create the model
+bike_rec_mod <- linear_reg() |> set_engine("lm")
+
+#create workflows
+wflow1 <- workflow() |>
+  add_recipe(rec_1) |>
+  add_model(bike_rec_mod)
+
+wflow2 <- workflow() |>
+  add_recipe(rec_2) |>
+  add_model(bike_rec_mod)
+
+wflow3 <- workflow() |>
+  add_recipe(rec_3) |>
+  add_model(bike_rec_mod)
+
+#cross validation folds
+createfold <- vfold_cv(bike_train, 10)
+```
+
+## Run Models on CV fold splits
+
+Here is where we train our models against the training data samples. Only the modelfits1 populates properly, debugging the other two are a work in progress. However, for modelfits1 we can see the root mean square error (rmse) and r-squared (rsq) associated with the model's fit.
+
+```{r}
+
+modelfits1 <- wflow1 |>
+  fit_resamples(createfold) 
+
+#can't get running
+modelfits2 <- wflow2 |>
+  fit_resamples(createfold) 
+
+#can't get running 
+modelfits3 <- wflow3 |> 
+  fit_resamples(createfold) 
+
+modelfits1 |> collect_metrics()
+#modelfits2 |> collect_metrics()
+#modelfits3 |> collect_metrics()
+
+
 ```
